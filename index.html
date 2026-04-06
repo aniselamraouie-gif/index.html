@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>قاموس المصطلحات الشامل - باك 2026</title>
+    <style>
+        :root { --bg: #0f172a; --card: #1e293b; --accent: #8b5cf6; --correct: #10b981; --wrong: #ef4444; }
+        body { background: var(--bg); color: white; font-family: 'Arial', sans-serif; display: flex; justify-content: center; padding: 20px; margin: 0; }
+        .app-container { width: 100%; max-width: 550px; text-align: center; }
+        .stats-bar { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; background: var(--card); padding: 15px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #334155; }
+        .screen { background: #020617; border: 2px solid var(--accent); padding: 30px 20px; border-radius: 25px; min-height: 280px; margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 0 25px rgba(139, 92, 246, 0.2); }
+        #term-text { font-size: 1.7rem; font-weight: bold; color: var(--accent); margin-bottom: 15px; }
+        #definition-text { font-size: 1rem; color: #f8fafc; visibility: hidden; line-height: 1.7; text-align: justify; padding: 0 10px; }
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        button { padding: 16px; border-radius: 12px; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; font-size: 1rem; }
+        .btn-main { background: var(--accent); color: white; grid-column: span 2; }
+        .btn-correct { background: var(--correct); color: white; display: none; }
+        .btn-wrong { background: var(--wrong); color: white; display: none; }
+        .add-section { background: var(--card); padding: 20px; border-radius: 20px; margin-top: 40px; border: 1px dashed #475569; }
+        input, textarea { width: 90%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #334155; background: #020617; color: white; text-align: center; }
+        .visible { visibility: visible !important; }
+        .badge { font-size: 0.8rem; background: #334155; padding: 4px 12px; border-radius: 20px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <h2 style="color: var(--accent);">📖 بنك المصطلحات الرسمي 2026</h2>
+
+    <div class="stats-bar">
+        <div>✅ أتقنت: <b id="good-count">0</b></div>
+        <div>❌ مراجعة: <b id="bad-count">0</b></div>
+        <div>📚 الكلي: <b id="total-count">0</b></div>
+    </div>
+
+    <div class="screen">
+        <div id="unit-tag" class="badge">الوحدة الأولى والثانية</div>
+        <div id="term-text">جاهز؟</div>
+        <div id="definition-text">التعريف سيظهر هنا..</div>
+    </div>
+
+    <div class="btn-grid">
+        <button id="spin-btn" class="btn-main" onclick="startSpin()">اختر مصطلحاً عشوائياً 🎲</button>
+        <button id="reveal-btn" class="btn-main" style="display:none;" onclick="reveal()">كشف التعريف 👁️</button>
+        <button id="wrong-btn" class="btn-wrong" onclick="markAs(false)">لم أحفظه ❌</button>
+        <button id="correct-btn" class="btn-correct" onclick="markAs(true)">حفظته ✅</button>
+    </div>
+
+    <div class="add-section">
+        <h4 style="margin:0 0 10px 0;">➕ أضف مصطلحاً من كراسك</h4>
+        <input type="text" id="new-term" placeholder="المصطلح">
+        <textarea id="new-def" rows="2" placeholder="التعريف..."></textarea>
+        <button style="background:#6d28d9; color:white; width:100%" onclick="addNewTerm()">حفظ شخصي</button>
+    </div>
+</div>
+
+<script>
+const fullData = [
+    // الوحدة الأولى: الحرب الباردة
+    { t: "العالم الثالث", d: "مصطلح أطلقه الاقتصادي ألفريد ساوفي على الدول المستقلة حديثاً في آسيا وإفريقيا وأمريكا اللاتينية والتي لا تنتمي للمسكرين المتصارعين.", u: "الوحدة 1", s: 0 },
+    { t: "الستار الحديدي", d: "مصطلح استخدمه وينستون تشرشل لوصف الحدود الوهمية التي قسمت أوروبا إلى شرق شيوعي وغرب رأسمالي بعد الحرب العالمية الثانية.", u: "الوحدة 1", s: 0 },
+    { t: "الحرب الباردة", d: "صراع إيديولوجي ومصلحي بين المعسكر الشرقي بقيادة الاتحاد السوفياتي والغربي بقيادة أمريكا، استُخدمت فيه كل الوسائل باستثناء السلاح المباشر.", u: "الوحدة 1", s: 0 },
+    { t: "الصراع الإيديولوجي", d: "تناقض مذهبي وفكري بين الرأسمالية (حرية الملكية) والشيوعية (الملكية الجماعية)، حيث يسعى كل طرف لفرض مذهبه عالمياً.", u: "الوحدة 1", s: 0 },
+    { t: "سياسة التكتل", d: "توجه كل معسكر نحو تكوين أحلاف عسكرية ومنظمات اقتصادية لتقوية نفوذه (مثل الناتو ووارسو).", u: "الوحدة 1", s: 0 },
+    { t: "سياسة الأحلاف", d: "اتفاقيات عسكرية تهدف لحماية المصالح المشتركة وردع العدو، مثل حلف الأطلسي وحلف بغداد وحلف وارسو.", u: "الوحدة 1", s: 0 },
+    { t: "سياسة المشاريع", d: "تقديم مساعدات مالية واقتصادية من طرف القوى الكبرى لكسب حلفاء (مثل مشروع مارشال ومشروع إيزنهاور).", u: "الوحدة 1", s: 0 },
+    { t: "سياسة ملء الفراغ", d: "استراتيجية أمريكية لتعويض نفوذ القوى الاستعمارية القديمة المنسحبة (بريطانيا وفرنسا) في المناطق الحيوية.", u: "الوحدة 1", s: 0 },
+    { t: "سياسة الاحتواء", d: "خطة أمريكية تعتمد على إنشاء الأحلاف والقواعد العسكرية لمحاصرة المد الشيوعي ومنع انتشاره.", u: "الوحدة 1", s: 0 },
+    { t: "التعايش السلمي", d: "مبدأ دعا إليه خروتشوف يقضي بضرورة قبول التعددية المذهبية وتجنب الحروب النووية وحل النزاعات بالحوار.", u: "الوحدة 1", s: 0 },
+    { t: "الانفراج الدولي", d: "مرحلة بدأت بعد أزمة الصواريخ 1962، تميزت بتحسن العلاقات بين المعسكرين والتوقيع على اتفاقيات الحد من السلاح.", u: "الوحدة 1", s: 0 },
+    { t: "حق الفيتو", d: "حق الاعتراض الذي تتمتع به الدول الخمس دائمة العضوية في مجلس الأمن، ويسمح لها بإبطال أي قرار لا يخدم مصالحها.", u: "الوحدة 1", s: 0 },
+    { t: "الشرعية الدولية", d: "الالتزام بتنفيذ قرارات الأمم المتحدة والمواثيق الدولية في حل النزاعات العالمية.", u: "الوحدة 1", s: 0 },
+    { t: "النظام الدولي الجديد", d: "مفهوم برز بعد سقوط الاتحاد السوفياتي، يعتمد على هيمنة القطب الواحد (أمريكا) وتوجيه العالم وفق مصالحها.", u: "الوحدة 1", s: 0 },
+    { t: "الأحادية القطبية", d: "نظام دولي تسيطر فيه دولة واحدة على القرار العالمي اقتصادياً وعسكرياً (الولايات المتحدة حالياً).", u: "الوحدة 1", s: 0 },
+
+    // الوحدة الثانية: الثورة الجزائرية
+    { t: "الثورة التحريرية", d: "عمل عسكري وسياسي منظم قادته جبهة التحرير الوطني ضد الاستعمار الفرنسي بهدف استرجاع السيادة الوطنية (1954-1962).", u: "الوحدة 2", s: 0 },
+    { t: "جبهة التحرير الوطني", d: "الجناح السياسي للثورة الجزائرية، تأسست في 23 أكتوبر 1954 لتمثيل الشعب الجزائري وقيادة نضاله.", u: "الوحدة 2", s: 0 },
+    { t: "جيش التحرير الوطني", d: "الجناح العسكري للثورة، تكفل بالعمليات القتالية ضد قوات الاستعمار الفرنسي.", u: "الوحدة 2", s: 0 },
+    { t: "حرب التحرير", d: "العمليات العسكرية التي دارت بين جيش التحرير الوطني والجيش الفرنسي طيلة سنوات الثورة.", u: "الوحدة 2", s: 0 },
+    { t: "بيان أول نوفمبر", d: "أول وثيقة رسمية صدرت عن جبهة التحرير، حددت أهداف الثورة ووسائلها وشروط التفاوض.", u: "الوحدة 2", s: 0 },
+    { t: "المخططات الإغرائية", d: "سياسة فرنسية تهدف لاستمالة الجزائريين وعزلهم عن الثورة عبر وعود اقتصادية واجتماعية كاذبة.", u: "الوحدة 2", s: 0 },
+    { t: "المخططات القمعية", d: "إجراءات عسكرية وحشية اتخذتها فرنسا لإخماد الثورة (المحتشدات، التعذيب، المناطق المحرمة).", u: "الوحدة 2", s: 0 },
+    { t: "المحتشدات", d: "مناطق مسيجة أنشأتها فرنسا لتجميع السكان الجزائريين قسرياً بهدف عزلهم عن جيش التحرير.", u: "الوحدة 2", s: 0 },
+    { t: "سلم الشجعان", d: "مناورة سياسية أطلقها ديغول عام 1958 تطلب من الثوار تسليم أسلحتهم مقابل العفو عنهم، لكنها رفضت.", u: "الوحدة 2", s: 0 },
+    { t: "القوة الثالثة", d: "فئة من العملاء حاولت فرنسا تكوينها لتمثيل الجزائريين بدلاً من جبهة التحرير الوطني في المفاوضات.", u: "الوحدة 2", s: 0 },
+    { t: "تقرير المصير", d: "حق الشعوب في اختيار نظامها السياسي ومستقبلها بحرية، وهو المبدأ الذي استند إليه استفتاء 1962.", u: "الوحدة 2", s: 0 },
+    { t: "المفاوضات", d: "محادثات سياسية جرت بين جبهة التحرير الوطني والحكومة الفرنسية لإنهاء الحرب، وتوجت باتفاقيات إيفيان.", u: "الوحدة 2", s: 0 },
+    { t: "اتفاقيات إيفيان", d: "المعاهدات التي وقعت بين الطرف الجزائري والفرنسي في مارس 1962، وأدت لوقف إطلاق النار والاستقلال.", u: "الوحدة 2", s: 0 },
+    { t: "السيادة الوطنية", d: "السلطة الفعلية للدولة على كامل أراضيها وشعبها دون تدخل أجنبي، استرجعتها الجزائر عام 1962.", u: "الوحدة 2", s: 0 }
+];
+
+let termDB = JSON.parse(localStorage.getItem('bac_terms_full')) || fullData;
+let currentTerm = null;
+
+function updateStats() {
+    document.getElementById('good-count').innerText = termDB.filter(i => i.s > 2).length;
+    document.getElementById('bad-count').innerText = termDB.filter(i => i.s < 0).length;
+    document.getElementById('total-count').innerText = termDB.length;
+}
+
+function addNewTerm() {
+    const tIn = document.getElementById('new-term');
+    const dIn = document.getElementById('new-def');
+    if(!tIn.value || !dIn.value) return;
+    termDB.push({ t: tIn.value, d: dIn.value, u: "إضافة خاصة", s: 0 });
+    localStorage.setItem('bac_terms_full', JSON.stringify(termDB));
+    tIn.value = ""; dIn.value = "";
+    updateStats();
+}
+
+function startSpin() {
+    document.getElementById('definition-text').classList.remove('visible');
+    document.getElementById('reveal-btn').style.display = "none";
+    let timer = 0;
+    let fastSpin = setInterval(() => {
+        document.getElementById('term-text').innerText = termDB[Math.floor(Math.random()*termDB.length)].t;
+        timer++;
+        if(timer > 10) { clearInterval(fastSpin); selectSmartly(); }
+    }, 70);
+}
+
+function selectSmartly() {
+    let sorted = [...termDB].sort((a, b) => a.s - b.s);
+    currentTerm = sorted[Math.floor(Math.random() * Math.min(6, sorted.length))];
+    document.getElementById('term-text').innerText = currentTerm.t;
+    document.getElementById('definition-text').innerText = currentTerm.d;
+    document.getElementById('unit-tag').innerText = currentTerm.u;
+    document.getElementById('spin-btn').style.display = "none";
+    document.getElementById('reveal-btn').style.display = "block";
+}
+
+function reveal() {
+    document.getElementById('definition-text').classList.add('visible');
+    document.getElementById('reveal-btn').style.display = "none";
+    document.getElementById('correct-btn').style.display = "block";
+    document.getElementById('wrong-btn').style.display = "block";
+}
+
+function markAs(isCorrect) {
+    let idx = termDB.findIndex(i => i.t === currentTerm.t);
+    if(isCorrect) termDB[idx].s += 3; else termDB[idx].s -= 2;
+    localStorage.setItem('bac_terms_full', JSON.stringify(termDB));
+    updateStats();
+    document.getElementById('correct-btn').style.display = "none";
+    document.getElementById('wrong-btn').style.display = "none";
+    document.getElementById('spin-btn').style.display = "block";
+    document.getElementById('term-text').innerText = "تم التحديث..";
+    document.getElementById('definition-text').classList.remove('visible');
+}
+
+window.onload = updateStats;
+</script>
+</body>
+</html>
